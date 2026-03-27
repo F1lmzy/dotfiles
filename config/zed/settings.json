@@ -1,0 +1,63 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "agent_servers": {
+    "claude-acp": {
+      "type": "registry"
+    },
+    "github-copilot": {
+      "type": "registry"
+    },
+    "opencode": {
+      "type": "registry"
+    }
+  },
+  "ssh_connections": [
+    {
+      "host": "login.cx3.hpc.imperial.ac.uk",
+      "username": "ka1525",
+      "args": [],
+      "projects": [
+        {
+          "paths": [
+            "/rds/general/user/ka1525/home"
+          ]
+        }
+      ]
+    },
+    {
+      "host": "login.cx3.hpc.imperial.ac.uk",
+      "username": "ka1525",
+      "args": [],
+      "projects": [
+        {
+          "paths": [
+            "/rds/general/user/ka1525/ephemeral/./"
+          ]
+        }
+      ]
+    }
+  ],
+  "agent": {
+    "default_profile": "write",
+    "always_allow_tool_actions": true,
+    "default_model": {
+      "provider": "copilot_chat",
+      "model": "gpt-5.3-codex"
+    },
+    "model_parameters": []
+  },
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "theme": {
+    "mode": "system",
+    "light": "Ayu Light",
+    "dark": "Ayu Dark"
+  }
+}
