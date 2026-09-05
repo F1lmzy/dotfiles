@@ -143,6 +143,10 @@ if [[ -d /usr/share/omarchy ]]; then
 fi
 
 # ---------- Local toolchains (guarded, only apply where installed) ----------
+# ~/.local/bin is the user-level bin dir on both macOS and Linux (pip --user,
+# uv, and lots of installers drop binaries here: hermes, camoufox, bili...).
+# Keep it early so it doesn't shadow system tools.
+export PATH="$HOME/.local/bin:$PATH"
 [ -r "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
 [ -r "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -r "$HOME/.opam/opam-init/init.zsh" ] && source "$HOME/.opam/opam-init/init.zsh"
