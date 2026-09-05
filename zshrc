@@ -70,7 +70,12 @@ ZSH_THEME="gozilla"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting fast-syntax-highlighting zsh-autocomplete brew)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting fast-syntax-highlighting zsh-autocomplete)
+# brew plugin is macOS-only; add it dynamically when brew actually exists (Linux uses pacman)
+(( $+commands[brew] )) && plugins+=(brew)
+
+# zsh-completions ships its completions as an fpath entry, not a plugin file
+fpath+=("${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-completions/src")
 
 source $ZSH/oh-my-zsh.sh
 
@@ -102,24 +107,75 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-neofetch
 
-[[ "$TERM_PROGRAM" == "kiro" ]] && . "$(kiro --locate-shell-integration-path zsh)"
+# System info on login — neofetch is gone from Arch repos, fall back to fastfetch
+if (( $+commands[neofetch] )); then
+  neofetch
+elif (( $+commands[fastfetch] )); then
+  fastfetch
+fi
+
+if [[ "$TERM_PROGRAM" == "kiro" ]] && (( $+commands[kiro] )); then
+  . "$(kiro --locate-shell-integration-path zsh)"
+fi
+
+# ---------- Linux/Omarchy shell env (carried over from the old ~/.bashrc) ----------
+if [[ -d /usr/share/omarchy ]]; then
+  export EDITOR="${EDITOR:-omarchy-launch-editor --inline}"
+  export SUDO_EDITOR="$EDITOR"
+  export BROWSER="${BROWSER:-omarchy-launch-browser}"
+  export BAT_THEME=ansi
+  export MANROFFOPT="-c"
+  export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+  [ -r /usr/share/omarchy/default/bash/env-bootstrap ] && source /usr/share/omarchy/default/bash/env-bootstrap
+
+  (( $+commands[mise] )) && eval "$(mise activate zsh)"
+  (( $+commands[fzf] )) && [[ -f /usr/share/fzf/key-bindings.zsh ]] && source /usr/share/fzf/key-bindings.zsh
+
+  # eza aliases, same as Omarchy's bash defaults
+  if (( $+commands[eza] )); then
+    alias ls='eza -lh --group-directories-first --icons=auto'
+    alias lsa='ls -a'
+    alias lt='eza --tree --level=2 --long --icons --git'
+    alias lta='lt -a'
+  fi
+  alias ff="fzf --preview 'bat --style=numbers --color=always {}'"
+fi
+
+# ---------- Local toolchains (guarded, only apply where installed) ----------
+[ -r "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+[ -r "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+[ -r "$HOME/.opam/opam-init/init.zsh" ] && source "$HOME/.opam/opam-init/init.zsh"
+
+export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+[[ -d "$HOME/.lmstudio/bin" ]] && export PATH="$PATH:$HOME/.lmstudio/bin"
+
+# terminal workaround, carried over from ~/.bashrc
+alias clear="TERM=xterm /usr/bin/clear"
 
 #~/.zshrc >>> juliaup initialize >>>
 
 # !! Contents within this block are managed by juliaup !!
 
-path=('/Users/kavin/.juliaup/bin' $path)
-export PATH
+if [[ -d "$HOME/.juliaup/bin" ]]; then
+  path=("$HOME/.juliaup/bin" $path)
+  export PATH
+fi
 
 # <<< juliaup initialize <<<
 
 # Added by Antigravity
-export PATH="/Users/kavin/.antigravity/antigravity/bin:$PATH"
+if [[ -d "$HOME/.antigravity/antigravity/bin" ]]; then
+  export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
+fi
 
 # bun completions
-[ -s "/Users/kavin/.bun/_bun" ] && source "/Users/kavin/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
@@ -127,11 +183,28 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 eval "$(zoxide init zsh)"
 
-# Added by Antigravity
-export PATH="/Users/kavin/.antigravity/antigravity/bin:$PATH"
-export PATH=/usr/local/texlive/bin/universal-darwin:$PATH
-export PATH=/usr/local/texlive/bin/universal-darwin:$PATH
-export PATH=/Library/TeX/texbin:$PATH
+# TeX Live (macOS paths; on Linux/Arch tex is already in PATH)
+for tp in /usr/local/texlive/bin/universal-darwin /Library/TeX/texbin; do
+  [[ -d "$tp" ]] && export PATH="$tp:$PATH"
+done
 
-#platformio
-export PATH="$PATH:$HOME/.platformio/penv/bin"
+# platformio
+if [[ -d "$HOME/.platformio/penv/bin" ]]; then
+  export PATH="$PATH:$HOME/.platformio/penv/bin"
+fi
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/opt/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/opt/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/opt/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
