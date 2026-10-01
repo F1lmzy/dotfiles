@@ -1,34 +1,66 @@
-# dotfiles
+# Portable Zsh, Git and Neovim
 
-Personal dotfiles, portable between macOS and Linux (Omarchy/Arch).
+Managed with chezmoi on Ubuntu, Arch and macOS. Only these three configurations
+are managed. No yt-dlp, credentials, histories, caches or binaries are included.
 
-## Layout
+## New machine
 
-- `zshrc` — Oh My Zsh config, symlinked to `~/.zshrc`. macOS-only paths are
-  guarded so the same file works on both machines.
-- `config/` — app configs mirroring `~/.config/<app>`. Some (yabai, skhd,
-  sketchybar, nix-darwin) are macOS-only and simply unused on Linux.
+Install chezmoi, Git, Zsh, Neovim >= 0.11.2, ripgrep, fd and a C compiler.
+Suggested package names (verify your distro's Neovim version):
 
-## Zsh setup on a new machine
+- Ubuntu: git zsh ripgrep fd-find build-essential curl unzip; install a current
+  Neovim separately if apt's version is too old. `fdfind` is Ubuntu's fd name.
+- Arch: chezmoi git zsh neovim ripgrep fd base-devel curl unzip.
+- macOS (Homebrew): chezmoi git zsh neovim ripgrep fd; install Xcode command-line
+  tools with `xcode-select --install` if not already present.
+- Optional: gh, zoxide, fzf, ImageMagick, uv, Python/Jupyter/jupytext.
+
+Once this repository has been committed and pushed to your chosen remote:
 
 ```sh
-# 1. Install Oh My Zsh (keeps an existing .zshrc; we replace it with the symlink anyway)
-KEEP_ZSHRC=yes RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-# 2. Point .zshrc at the repo
-ln -sf "$PWD/zshrc" "$HOME/.zshrc"
-
-# 3. Install custom plugins into $ZSH_CUSTOM/plugins/ ($ZSH = ~/.oh-my-zsh)
-git clone https://github.com/zsh-users/zsh-autosuggestions      "$ZSH/custom/plugins/zsh-autosuggestions"
-git clone https://github.com/zsh-users/zsh-syntax-highlighting  "$ZSH/custom/plugins/zsh-syntax-highlighting"
-git clone https://github.com/zdharma-continuum/fast-syntax-highlighting "$ZSH/custom/plugins/fast-syntax-highlighting"
-git clone https://github.com/marlonrichert/zsh-autocomplete      "$ZSH/custom/plugins/zsh-autocomplete"
-git clone https://github.com/zsh-users/zsh-completions          "$ZSH/custom/plugins/zsh-completions"
-
-# 4. Make zsh the login shell (add /usr/bin/zsh to /etc/shells first on Arch)
-chsh -s "$(command -v zsh)"
+chezmoi init <repository-url>
+sh "$(chezmoi source-path)/bootstrap.sh"
+chezmoi diff
+chezmoi apply --dry-run --verbose
+chezmoi apply
+nvim --headless '+Lazy! restore' +qa
 ```
 
-> Note: `zsh-syntax-highlighting` and `fast-syntax-highlighting` are both syntax
-> highlighters and are not meant to be loaded together — the config currently
-> loads both; pick one and drop the other from `plugins=(...)` if you see issues.
+The bootstrap only installs Oh My Zsh and four plugins, without sudo or changing
+existing configs. Run it explicitly. Change your login shell separately if needed.
+Neovim plugins are installed by Lazy, not stored here. Restore from lazy-lock.json
+for consistent versions. Notebook features need separate Python dependencies;
+image rendering requires ImageMagick and a Kitty-graphics-capable terminal.
+
+## Daily workflow
+
+```sh
+chezmoi edit ~/.zshrc
+chezmoi diff
+chezmoi apply
+chezmoi cd
+# Review all changes, then commit and push normally.
+git add .
+git commit -m 'Update configuration'
+git push
+```
+
+On another machine: `chezmoi git pull --rebase`, then `chezmoi diff` and
+`chezmoi apply`. If an app changes a deployed file (including Lazy's lockfile),
+use `chezmoi add <file>` to import that change before the next apply.
+
+## Local settings and secrets
+
+- ~/.config/zsh/local.zsh: optional machine-local shell overrides.
+- ~/.gitconfig.local: optional identity or credential overrides, included last.
+- GitHub authentication uses `gh auth git-credential` if gh exists when applying.
+- macOS defaults to the Keychain credential helper.
+- Linux has no shared plaintext credential helper. The migrated Ubuntu machine
+  retains its previous `store` helper only in its untracked ~/.gitconfig.local.
+  This preserves existing authentication but stores credentials in plaintext;
+  consider replacing it with a secure helper later.
+- Never add ~/.git-credentials, private keys or tokens to this source repository.
+
+The original ~/dotfiles repository remains untouched. ~/.zshrc is now a regular
+chezmoi-managed file, no longer a symlink to that old repository. Backups from
+migration are under ~/.local/state/dotfiles-backups/.

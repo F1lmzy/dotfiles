@@ -1,0 +1,5 @@
+README.md
+bootstrap.sh
+.gitconfig.local
+.config/zsh/local.zsh
+.config/nvim/local.lua

@@ -1,0 +1,16 @@
+# Managed by chezmoi. Machine-specific settings belong in ~/.gitconfig.local.
+[user]
+	name = Sri Rajkavin
+	email = 159130030+F1lmzy@users.noreply.github.com
+[init]
+	defaultBranch = main
+{{ if eq .chezmoi.os "darwin" }}[credential]
+	helper = osxkeychain
+{{ end }}{{ if lookPath "gh" }}[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential
+{{ end }}[include]
+	path = ~/.gitconfig.local

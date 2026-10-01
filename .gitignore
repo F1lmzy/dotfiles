@@ -1,10 +1,7 @@
-# Ignore Mac system files
 .DS_Store
-
-# Ignore specific sensitive files within configs
-**/hosts.json
-**/tokens.json
-**/*.log
-
-# If you moved github-copilot, ignore the token
-config/github-copilot/hosts.json
+*.log
+*.swp
+.env
+.gitconfig.local
+dot_config/zsh/local.zsh
+dot_config/nvim/local.lua
