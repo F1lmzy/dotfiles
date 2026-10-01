@@ -3,3 +3,8 @@ bootstrap.sh
 .gitconfig.local
 .config/zsh/local.zsh
 .config/nvim/local.lua
+
+# sketchybar only exists on macOS; keep it off Linux machines.
+{{ if ne .chezmoi.os "darwin" }}
+.config/sketchybar
+{{ end }}

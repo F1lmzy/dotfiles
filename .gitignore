@@ -5,3 +5,6 @@
 .gitconfig.local
 dot_config/zsh/local.zsh
 dot_config/nvim/local.lua
+
+# sketchybar helper build artifacts (rebuilt by `make` on startup)
+dot_config/sketchybar/helpers/**/bin/
